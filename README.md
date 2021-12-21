@@ -176,3 +176,139 @@
 
 </div>
 </details>
+
+<details>
+<summary>Lesson3 Sum-Up</summary>
+<div markdown="3">  
+
+- **이더리움 DApp 의 특징**
+     
+     1. 불변성
+     
+     이더리움에 컨트랙트를 배포하고 나면 컨트랙트는 변하지 않고 수정이 불가 = 컨트랙트로 배포한 최초의 코드가 항상 블록체인에 영구 존재 
+     
+     -> 보안 이슈 : 코드에 결점이 있다면 이후에 고칠 방법이 없다.. / 그러나 검증을 했다면, 누구도 배포 이후에 예상치 못한 결과를 발생시키지 못한다.
+
+     2. 외부 의존성
+
+     블록체인 외부 데이터(예를 들면 크립토키티 컨트랙트)에 버그가 생기면 본인의 DApp까지 작동하지 못할 수 있고 수정이 불가능하게 된다. 따라서 본인 댑의 중요한 일부를 수정할 수 있도록 가변 데이터/함수를 사용한다. 
+     
+- **Ownable 컨트랙트**
+
+    ```Solidity
+    /**
+    * @title Ownable
+    * @dev The Ownable contract has an owner address, and provides basic authorization control
+    * functions, this simplifies the implementation of "user permissions".
+    */
+    contract Ownable {
+      address public owner;
+      event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+
+    /**
+    * @dev The Ownable constructor sets the original `owner` of the contract to the sender
+    * account.
+    */
+    function Ownable() public {
+        owner = msg.sender;
+    }
+
+    /**
+    * @dev Throws if called by any account other than the owner.
+    */
+    modifier onlyOwner() {
+        require(msg.sender == owner);
+        _;
+    }
+
+    /**
+    * @dev Allows the current owner to transfer control of the contract to a newOwner.
+    * @param newOwner The address to transfer ownership to.
+    */
+    function transferOwnership(address newOwner) public onlyOwner {
+        require(newOwner != address(0));
+        OwnershipTransferred(owner, newOwner);
+        owner = newOwner;
+    }
+    }
+    ```
+
+     -> **onlyOwner()** 에 대해 더 살펴보자 !! <-
+    
+    ```Solidity
+    function likeABoss() external onlyOwner {
+        LaughManiacally("Muahahahaha");
+    }
+    ```
+
+    위 코드의 예시에서, likeABoss() 함수 호출 시 onlyOwner 이 먼저 실행 -> onlyOwner 의 _; 부분에서 likeABoss 함수로 돌아와 코드 실행
+
+    제어자 사용하는 방법들 중 require 체크를 넣는 것이 일반적이다.
+
+    참고 : 소유자가 컨트랙트에 특별 권한을 갖도록 하는 것은 자주 필요하지만, 백도어 함수가 추가될 수도 있고 여러 방식으로 권한 관련 악용될 수 있다 !!
+
+- **가스**
+
+    : 이더리움 DApp이 사용하는 연료로, 솔리디티에서는 사용자들이 다른 사람의 DApp 함수를 실행할 때마다 "가스"를 지불해야 함. 사용자는 이더(ETH) 로 가스를 사기 때문에 다른 사용자의 함수를 실행하기 위해서는 ETH 소모 필요
+
+    가스 비용은 그 연산을 수행하는 데에 소모되는 컴퓨팅 자원의 양이 결정하며, 함수 로직의 복잡성에 따라 다르다.
+
+    왜 !! 필요한가 ??
+    
+        -> 이더리움은 안전하지만 크고 느리다. 누군가 무한 반복문을 써서 네트워크를 방해하거나 자원소모가 큰 연산을 씀으로써 자원 낭비를 하지 않도록 만드는 것이 이더리움의 철학이었기 때문에 가스가 필요한 것 !!
+
+    **가스 사용 최적화**
+    1. 구조체 압축 
+    
+        : uint는 기본 256이므로 가능하다면 uint32 등으로 축소하자
+
+    2. view 사용 (중요)
+
+        : view 함수는 *외부에서 호출되었을 때* (동일 컨트랙트 내의 다른 함수 내부 호출은 해당 x) 가스를 전혀 소모하지 않음. 블록체인 상에서 실제로 어떤 것도 수정하지 않기 때문 !! 
+
+    3. storage 점검
+
+        : storage는 영구 기록용이기 땨문에 비쌈. 진짜 필요한 경우가 아니면 memory로 변경하는 방법을 고려하자 !!
+
+        참고 : 메모리에 배열 선언하기 / 메모리 배열은 *반드시 길이 인수와 함께 생성되어야 함*
+
+        `uint[] memory values = new uint[](3);`
+
+
+- **시간단위**
+
+    now는 현재의 유닉스 타임스탬프 값을 반환
+
+    ```Solidity
+    uint lastUpdated;
+
+    // `lastUpdated`를 `now`로 설정
+    function updateTimestamp() public {
+    lastUpdated = now;
+    }
+
+    // `updateTimestamp`가 호출된 뒤 5분이 지났으면 `true`를, 5분이 아직 지나지 않았으면 `false`를 반환
+    function fiveMinutesHavePassed() public view returns (bool) {
+    return (now >= (lastUpdated + 5 minutes));
+    }
+    ```
+- **인수를 가지는 함수 제어자**
+    
+    ```Solidity
+    // 사용자의 나이를 저장하기 위한 매핑
+    mapping (uint => uint) public age;
+
+    // 사용자가 특정 나이 이상인지 확인하는 제어자
+    modifier olderThan(uint _age, uint _userId) {
+      require (age[_userId] >= _age);
+      _;
+    }
+
+    // `olderThan` 제어자를 인수와 함께 호출:
+    function driveCar(uint _userId) public olderThan(16, _userId) {
+      // 필요한 함수 내용들
+    }
+    ```
+
+</div>
+</details>

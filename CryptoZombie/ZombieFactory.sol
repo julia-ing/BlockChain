@@ -1,15 +1,20 @@
 pragma solidity ^0.8.0; // 버전 
 
-contract ZombieFactory {
+import "./Ownable.sol";
+
+contract ZombieFactory is Ownable {
 
     event NewZombie(uint zombieId, string name, uint dna); // 이벤트 선언
 
     uint dnaDigits = 16; // 상태변수
     uint dnaModulus = 10 ** dnaDigits; // 10^16 지수연산
+    uint cooldownTime = 1 days; 
 
     struct Zombie { // 좀비 구조체
         string name;
         uint dna;
+        uint32 level;
+        uint32 readyTime; // 가스를 고려해 32로 명시
     }
 
     Zombie[] public zombies; // public 구조체 동적 배열
@@ -19,7 +24,7 @@ contract ZombieFactory {
 
     function _createZombie(string _name, uint _dna) internal { // private -> internal
         // 마지막에 추가된 좀비의 인덱스를 얻기 위해 -1 을 해준다
-        uint id = zombies.push(Zombie(_name, _dna)) - 1; // 구조체 생성 후 push 로 배열에 순차 추가
+        uint id = zombies.push(Zombie(_name, _dna, 1, uint32(now + cooldownTime))) - 1; // 구조체 생성 후 push 로 배열에 순차 추가
         zombieToOwner[id] = msg.sender; // msg.sender 전역 변수 이용 - 보안과 관련
         ownerZombieCount[msg.sender]++;
         // 이벤트 실행
