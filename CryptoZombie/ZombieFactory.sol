@@ -1,8 +1,13 @@
 pragma solidity ^0.8.0; // 버전 
 
 import "./Ownable.sol";
+import "./safemath.sol";
 
 contract ZombieFactory is Ownable {
+
+    using SafeMath for uint256; // 오버플로우 방지
+    using SafeMath32 for uint32;
+    using SafeMath16 for uint16;
 
     event NewZombie(uint zombieId, string name, uint dna); // 이벤트 선언
 
@@ -28,7 +33,8 @@ contract ZombieFactory is Ownable {
         // 마지막에 추가된 좀비의 인덱스를 얻기 위해 -1 을 해준다
         uint id = zombies.push(Zombie(_name, _dna, 1, uint32(now + cooldownTime), 0, 0)) - 1; // 구조체 생성 후 push 로 배열에 순차 추가
         zombieToOwner[id] = msg.sender; // msg.sender 전역 변수 이용 - 보안과 관련
-        ownerZombieCount[msg.sender]++;
+        // ownerZombieCount[msg.sender]++;
+        ownerZombieCount[msg.sender] = ownerZombieCount[msg.sender].add(1);
         // 이벤트 실행
         NewZombie(id, _name, _dna);
     }

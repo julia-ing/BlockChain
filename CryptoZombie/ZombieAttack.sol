@@ -2,12 +2,13 @@ pragma solidity ^0.8.0;
 
 import "./ZombieHelper.sol";
 
-contract ZombieBattle is ZombieHelper {
+contract ZombieAttack is ZombieHelper {
   uint randNonce = 0;
   uint attackVictoryProbability = 70;
   
   function randMod(uint _modulus) internal returns(uint) {
-    randNonce++;
+    // randNonce++;
+    randNonce = randNonce.add(1);
     // 난수 생성, keccak256 해시함수를 이용하며 % _modulus 로 마지막 몇자리만을 취한다
     return uint(keccak256(now, msg.sender, randNonce)) % _modulus;
   }
@@ -19,13 +20,14 @@ contract ZombieBattle is ZombieHelper {
     uint rand = randMod(100); // 난수 
 
     if (rand <= attackVictoryProbability) {
-      myZombie.winCount++; // 승
-      myZombie.level++;
-      enemyZombie.lossCount++; // 패
+      // myZombie.winCount++;
+      myZombie.winCount = myZombie.winCount.add(1); // 승
+      myZombie.level = myZombie.level.add(1);
+      enemyZombie.lossCount = enemyZombie.lossCount.add(1); // 패
       feedAndMultiply(_zombieId, enemyZombie.dna, "zombie"); // 함수 호출
     } else {
-      myZombie.lossCount++; // 패
-      enemyZombie.winCount++; // 승
+      myZombie.lossCount = myZombie.lossCount.add(1); // 패
+      enemyZombie.winCount = enemyZombie.winCount.add(1); // 승
     }
     _triggerCooldown(myZombie); // 쿨다운 (좀비 재사용 대기 시간)
   }

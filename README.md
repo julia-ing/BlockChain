@@ -368,3 +368,93 @@
 
 </div>
 </details>
+
+<details>
+<summary>Lesson5 Sum-Up</summary>
+<div markdown="5">  
+
+- **토큰**
+
+    이더리움에서 토큰은 몇몇 공통 규약을 따르는 스마트 컨트랙트. 즉 다른 모든 토큰 컨트랙트가 사용하는 표준 함수 집합을 구현하는 것. 
+
+    ex) 
+    
+    `transfer(address _to, uint256 _value)`
+
+    `balanceOf(address _owner)`
+
+    기본적으로 토큰은 그저 하나의 컨트랙트이다. 그 안에서 누가 얼마나 많은 토큰을 갖고 있는지 기록하고 함수를 이용해 사용자들이 토큰을 다른 주소로 전송할 수 있게 해준다 !!
+
+    WHY 이렇게 할까 ??
+    
+    -> 모든 ERC20 토큰들이 똑같은 이름의 동일한 함수 집합을 공유하기 때문에 이 토큰들에 똑같은 방식으로 상호작용이 가능 : 만약 본인이 ERC20 토큰과 상호작용할 수 있는 앱을 하나 만든다면, 새로운 토큰의 컨트랙트 주소를 끼워넣는 것만으로 다른 어떤 ERC20 토큰과도 상호작용이 가능하다 !! 
+
+    ex) 거래소 - 새로운 ERC20 토큰을 상장할 때, 실제로는 이 거래소에서 통신이 가능한 또 하나의 스마트 컨트랙트를 추가하는 것이다. 사용자들은 이 컨트랙트에 거래소의 지갑 주소에 토큰을 보내라고 할 수 있고 / 거래소에서는 이 컨트랙트에 사용자들이 출금을 신청하면 토큰을 다시 돌려보내라고 할 수 있다.
+
+    - 토큰의 종류
+    
+        ERC20 - 위처럼 화폐처럼 사용되는 토큰에 적합
+
+        ERC721 - 교체 불가. 분할이 불가하기 때문에 전체 단위로만 거래할 수 있고 각각의 토큰은 유일한 ID를 갖는다. ex) 크립토좀비, 크립토 수집품
+        
+        ERC721 표준은 아래와 같다.
+
+        ```Solidity
+        contract ERC721 {
+        event Transfer(address indexed _from, address indexed _to, uint256 _tokenId);
+        event Approval(address indexed _owner, address indexed _approved, uint256 _tokenId);
+
+        // balanceOf : address를 받아 해당 address가 토큰을 얼마나 가지고 있는지 반환
+        function balanceOf(address _owner) public view returns (uint256 _balance);
+        // ownerOf : 토큰 ID(좀비 ID)를 받아 이를 소유하고 있는 사람의 address를 반환
+        function ownerOf(uint256 _tokenId) public view returns (address _owner);
+
+        // 토큰 전송의 두가지 방법
+        <!-- 1. 토큰 소유자가 transfer 호출 (takeOwnership과 동일한 로직, 순서만 반대 - 전자는 토큰을 보내는 사람이 함수 호출, 후자는 받는 사람이 호출)
+        2. 토큰 소유자가 approve 호출 
+            -> 이후에 mapping(uint256 => address) 를 사용해 컨트랙트에 누가 해당 토큰을 가질 수 있도록 허가받았는지 저장
+            -> 누군가 takeOwnership 호출하면 해당 컨트랙트는 이 msg.sender가 소유자로부터 토큰을 받을 수 있게 허가받았는지 확인하고 전송 -->
+        function transfer(address _to, uint256 _tokenId) public;
+        function approve(address _to, uint256 _tokenId) public;
+        function takeOwnership(uint256 _tokenId) public;
+        }
+        ```
+
+- **컨트랙트 보안 강화 : 오버플로우와 언더플로우**
+    
+    ```Solidity
+    uint8 number = 255;
+    number++; // 256이 아닌 0이 됨 -> 오버플로우
+    // 언더플로우는 이와 유사하게 0 값을 가진 uint8에서 1을 빼면 255와 같아지는 것
+    ```
+
+    -> **SafeMath** 라이브러리 사용하기 !!
+
+    `using SafeMath for uint256;`
+
+    ```Solidity
+    function add(uint256 a, uint256 b) internal pure returns (uint256) {
+        uint256 c = a + b;
+        assert(c >= a);
+        return c;
+    }
+    ```
+
+    assert 구문으로 합한 결과가 더 큼을 보장함으로써 오버플로우를 막아준다. 
+
+    assert는 조건을 만족하지 않으면 에러를 발생시킨다는 점에서 require와 비슷하다. 그러나 assert와 require의 차이점은, require은 함수 실행이 실패하면 남은 가스를 사용자에게 되돌려 주지만, assert는 그렇지 않다는 것 -> assert 는 오버플로우와 같이 코드가 심각하게 잘못 실행되는 경우 사용
+
+    결과적으로 SafeMath 를 사용하기 위해서 코드는
+
+    `myUint++; `
+    
+    를 아래와 같이 변경해줄 수 있다 !!
+    
+    `myUint = myUint.add(1);`
+
+- **주석**
+
+    natspec 표준 주석으로 /// 사용
+
+</div>
+</details>
