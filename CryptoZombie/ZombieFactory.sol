@@ -14,9 +14,14 @@ contract ZombieFactory {
 
     Zombie[] public zombies; // public 구조체 동적 배열
 
-    function _createZombie(string _name, uint _dna) private { // private
+    mapping (uint => address) public zombieToOwner; // 매핑 선언
+    mapping (address => uint) ownerZombieCount;
+
+    function _createZombie(string _name, uint _dna) internal { // private -> internal
         // 마지막에 추가된 좀비의 인덱스를 얻기 위해 -1 을 해준다
         uint id = zombies.push(Zombie(_name, _dna)) - 1; // 구조체 생성 후 push 로 배열에 순차 추가
+        zombieToOwner[id] = msg.sender; // msg.sender 전역 변수 이용 - 보안과 관련
+        ownerZombieCount[msg.sender]++;
         // 이벤트 실행
         NewZombie(id, _name, _dna);
     }
@@ -27,6 +32,7 @@ contract ZombieFactory {
     }
 
     function createRandomZombie(string _name) public {
+        require(ownerZombieCount[msg.sender] == 0); // 좀비를 한번만 만들 수 있도록 require 이용해 조건 필터
         uint randDna = _generateRandomDna(_name); // 위 두 함수를 이용
         _createZombie(_name, randDna);
     }
