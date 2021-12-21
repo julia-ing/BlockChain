@@ -43,7 +43,7 @@
         }
     ```
 
-- **제어자**
+- **상태 제어자**
 
     1. view : 함수가 데이터를 보기만 하고 변경 x
     2. pure : 함수가 앱에서 어떤 데이터도 접근 x ex) 연산 값 돌려주는 함수
@@ -241,7 +241,7 @@
     }
     ```
 
-    위 코드의 예시에서, likeABoss() 함수 호출 시 onlyOwner 이 먼저 실행 -> onlyOwner 의 _; 부분에서 likeABoss 함수로 돌아와 코드 실행
+    위 코드의 예시에서, likeABoss() 함수 호출 시 사용자 정의 제어자인 onlyOwner 이 먼저 실행 -> onlyOwner 의 _; 부분에서 likeABoss 함수로 돌아와 코드 실행
 
     제어자 사용하는 방법들 중 require 체크를 넣는 것이 일반적이다.
 
@@ -308,6 +308,62 @@
     function driveCar(uint _userId) public olderThan(16, _userId) {
       // 필요한 함수 내용들
     }
+    ```
+
+</div>
+</details>
+
+<details>
+<summary>Lesson4 Sum-Up</summary>
+<div markdown="4">  
+
+- **payable 제어자**
+
+    이더리움에서는 돈(_이더_), 데이터(transaction payload), 그리고 컨트랙트 코드 자체 모두 이더리움 위에 존재하기 때문에 함수를 실행하는 동시에 컨트랙트에 돈을 지불하는 것이 가능
+
+    ```Solidity
+    contract OnlineStore {
+    function buySomething() external payable {
+        // 함수 실행에 0.001이더가 보내졌는지 확실히 하기 위해 확인:
+        require(msg.value == 0.001 ether);
+        // 보내졌다면, 함수를 호출한 자에게 디지털 아이템을 전달하기 위한 내용 구성:
+        transferThing(msg.sender);
+    }
+    }
+    ```
+
+- **출금**
+
+    컨트랙트로 이더를 보내면 이더리움 계좌에 이더가 저장되고 갇힘 -> 컨트랙트로부터 이더를 인출하는 함수 필요
+
+    ```Solidity
+    contract GetPaid is Ownable {
+        function withdraw() external onlyOwner {
+            owner.transfer(this.balance);
+        }
+    }
+    ```
+
+    **transfer** 함수 사용
+    
+    : 이더를 특정 주소로 전달할 수 있게 함. 위 예시에서 this.balance는 컨트랙트에 저장되어 있는 전체 잔액을 반환한다.
+
+    ```Solidity
+    uint itemFee = 0.001 ether;
+    msg.sender.transfer(msg.value - itemFee);
+    ```
+    (누군가 한 아이템에 대해 초과 지불을 했을 때, 이더를 msg.sender로 되돌려주는 예시)
+
+- **난수 생성** (솔리디티에서는 안전한 난수 생성이 어렵다)
+
+    - keccak256 해시 함수 사용
+
+    ```Solidity
+    // Generate a random number between 1 and 100:
+    uint randNonce = 0;
+    uint random = uint(keccak256(now, msg.sender, randNonce)) % 100; // %100은 마지막 두자리만 취하기 위함
+    randNonce++;
+    uint random2 = uint(keccak256(now, msg.sender, randNonce)) % 100;
     ```
 
 </div>

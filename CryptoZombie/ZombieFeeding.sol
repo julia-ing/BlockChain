@@ -24,6 +24,11 @@ contract ZombieFeeding is ZombieFactory {
 
     KittyInterface kittyContract;
 
+    modifier ownerOf(uint _zombieId) {
+        require(msg.sender == zombieToOwner[_zombieId]);
+        _;
+    }
+
     function setKittyContractAddress(address _address) external onlyOwner { // external 은 누구든 호출 가능해 보안 취약점 존재 -> Ownable
         kittyContract = KittyInterface(_address);
     }
@@ -36,8 +41,9 @@ contract ZombieFeeding is ZombieFactory {
         return (_zombie.readyTime <= now); // 준비 상태인지 확인
     }
 
-    function feedAndMultiply(uint _zombieId, uint _targetDna, string _species) internal { // 보안상 public -> internal
-        require(msg.sender == zombieToOwner[_zombieId]); // 좀비 주인만 먹이를 줄 수 있음
+    function feedAndMultiply(uint _zombieId, uint _targetDna, string _species) internal ownerOf(_zombieId) { // 보안상 public -> internal
+        // modifier 사용으로 변경 -> require 필요 없어짐
+        // require(msg.sender == zombieToOwner[_zombieId]); // 좀비 주인만 먹이를 줄 수 있음
         Zombie storage myZombie = zombies[_zombieId]; // 영구 저장
         require(_isReady(myZombie)); // 좀비 재사용 대기 시간이 끝난 이후에만 이 함수 실행 가능 
         _targetDna = _targetDna % dnaModulus; // 16자리수 맞추기

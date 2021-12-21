@@ -15,6 +15,8 @@ contract ZombieFactory is Ownable {
         uint dna;
         uint32 level;
         uint32 readyTime; // 가스를 고려해 32로 명시
+        uint16 winCount;
+        uint16 lossCount; // 승패 카운트 추가
     }
 
     Zombie[] public zombies; // public 구조체 동적 배열
@@ -24,7 +26,7 @@ contract ZombieFactory is Ownable {
 
     function _createZombie(string _name, uint _dna) internal { // private -> internal
         // 마지막에 추가된 좀비의 인덱스를 얻기 위해 -1 을 해준다
-        uint id = zombies.push(Zombie(_name, _dna, 1, uint32(now + cooldownTime))) - 1; // 구조체 생성 후 push 로 배열에 순차 추가
+        uint id = zombies.push(Zombie(_name, _dna, 1, uint32(now + cooldownTime), 0, 0)) - 1; // 구조체 생성 후 push 로 배열에 순차 추가
         zombieToOwner[id] = msg.sender; // msg.sender 전역 변수 이용 - 보안과 관련
         ownerZombieCount[msg.sender]++;
         // 이벤트 실행
